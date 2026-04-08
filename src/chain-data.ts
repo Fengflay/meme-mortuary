@@ -97,12 +97,12 @@ function decodeAbiString(hex: string): string {
     const length = parseInt(hex.slice(2 + offset, 2 + offset + 64), 16);
     if (length === 0 || length > 200) return "";
     const strHex = hex.slice(2 + offset + 64, 2 + offset + 64 + length * 2);
-    let str = "";
-    for (let i = 0; i < strHex.length; i += 2) {
-      const code = parseInt(strHex.slice(i, i + 2), 16);
-      if (code > 0) str += String.fromCharCode(code);
+    // Use Uint8Array + TextDecoder for proper UTF-8 support (Chinese chars etc.)
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      bytes[i] = parseInt(strHex.slice(i * 2, i * 2 + 2), 16);
     }
-    return str.trim();
+    return new TextDecoder("utf-8").decode(bytes).trim();
   } catch {
     return "";
   }
