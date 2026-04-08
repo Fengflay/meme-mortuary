@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEME Mortuary - Where Dead Coins Get Roasted</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1a1a1a;
+      --text: #c8c0b0;
+      --text-dim: #6a6358;
+      --accent: #8b7355;
+      --accent-glow: #b89a6b;
+      --red: #8b3a3a;
+      --red-bright: #c77;
+      --green: #3a8b5a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Text', Georgia, serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(139,115,85,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* NAV */
+    .nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; }
+    .nav a {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav a:hover { color: var(--accent-glow); }
+    .nav a.active { color: var(--accent-glow); border-bottom: 1px solid var(--accent); }
+
+    header {
+      text-align: center;
+      padding: 2rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    header .cross { font-size: 2.5rem; color: var(--accent); opacity: 0.7; margin-bottom: 0.5rem; }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--accent-glow);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle { font-size: 1.1rem; color: var(--text-dim); font-style: italic; letter-spacing: 0.05em; }
+
+    .input-section { text-align: center; margin-bottom: 3rem; }
+
+    .input-section label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .input-row { display: flex; gap: 0.8rem; max-width: 600px; margin: 0 auto; }
+
+    .input-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .input-row input:focus { border-color: var(--accent); }
+    .input-row input::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+    .btn {
+      background: var(--accent);
+      color: #0a0a0a;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.9rem 1.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--accent-glow); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* LOADING - funny messages */
+    .loading { display: none; text-align: center; padding: 3rem 0; }
+    .loading.active { display: block; }
+    .loading .skull { font-size: 3rem; animation: float 2s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-5deg); } 75% { transform: translateY(-5px) rotate(5deg); } }
+    .loading p { color: var(--text-dim); font-style: italic; margin-top: 1rem; font-size: 1.05rem; }
+
+    .error {
+      display: none;
+      background: rgba(139, 58, 58, 0.15);
+      border: 1px solid var(--red);
+      padding: 1rem 1.5rem;
+      border-radius: 4px;
+      margin-bottom: 2rem;
+      color: var(--red-bright);
+    }
+    .error.active { display: block; }
+
+    .report { display: none; }
+    .report.active { display: block; }
+
+    /* TOMBSTONE with hover shake */
+    .tombstone {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+
+    .tombstone:hover {
+      animation: tombshake 0.4s ease-in-out;
+    }
+
+    @keyframes tombshake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-1deg); }
+      40% { transform: rotate(1.5deg); }
+      60% { transform: rotate(-0.5deg); }
+      80% { transform: rotate(0.5deg); }
+    }
+
+    .tombstone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .tombstone .rip {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .tombstone .token-name {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-glow);
+      margin-bottom: 0.3rem;
+    }
+
+    .tombstone .token-symbol {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+    }
+
+    .tombstone .dates { font-size: 1.1rem; color: var(--text); margin-bottom: 1rem; }
+
+    .tombstone .epitaph {
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--text);
+      max-width: 400px;
+      margin: 1.5rem auto 0;
+      line-height: 1.6;
+    }
+
+    .death-badge {
+      display: inline-block;
+      background: rgba(139, 58, 58, 0.2);
+      border: 1px solid var(--red);
+      color: var(--red-bright);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+      margin-top: 1rem;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .vitals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+
+    .vital { padding: 0.8rem; background: rgba(0,0,0,0.3); border-radius: 4px; }
+    .vital .label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .vital .value { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--text); }
+    .vital .value.dead { color: var(--red-bright); }
+
+    .obituary-text { font-size: 1.05rem; line-height: 1.8; color: var(--text); }
+    .obituary-text p { margin-bottom: 1rem; text-indent: 1.5rem; }
+
+    /* ABSURDITY METER */
+    .absurdity-section { text-align: center; padding: 1.5rem; }
+    .absurdity-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .absurdity-bar {
+      width: 100%;
+      max-width: 400px;
+      height: 24px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 12px;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+    .absurdity-fill {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 1s ease-out;
+      background: linear-gradient(90deg, #3a8b5a, #8b8b3a, #8b5a3a, #8b3a3a, #8b3a6a);
+    }
+    .absurdity-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent-glow);
+      margin-top: 0.5rem;
+    }
+    .absurdity-comment {
+      font-style: italic;
+      color: var(--text-dim);
+      margin-top: 0.3rem;
+      font-size: 0.95rem;
+    }
+
+    /* LAST WORDS */
+    .last-words {
+      text-align: center;
+      padding: 1.5rem 2rem;
+      font-style: italic;
+      font-size: 1.2rem;
+      line-height: 1.7;
+      color: var(--text);
+      position: relative;
+    }
+    .last-words::before { content: '\201C'; font-size: 3rem; color: var(--accent); opacity: 0.3; position: absolute; top: 0; left: 1rem; }
+    .last-words .speaker {
+      display: block;
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      font-style: normal;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* CEMETERY NOTICE */
+    .cemetery-notice {
+      display: none;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .cemetery-notice.active { display: block; }
+    .cemetery-notice a { color: var(--accent-glow); text-decoration: none; }
+    .cemetery-notice a:hover { text-decoration: underline; }
+
+    /* COMMUNITY VOICES */
+    .voice-card {
+      background: rgba(0,0,0,0.3);
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      border-radius: 0 4px 4px 0;
+    }
+    .voice-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+      font-style: italic;
+    }
+    .voice-meta {
+      margin-top: 0.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+    .voice-meta a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .voice-meta a:hover { text-decoration: underline; }
+
+    .holders-list { list-style: none; }
+    .holders-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .holders-list .addr { color: var(--text-dim); }
+
+    .share-section { text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .share-section .btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .share-section .btn:hover { background: var(--accent); color: #0a0a0a; }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+    footer .footer-joke { opacity: 0.5; margin-top: 0.3rem; font-style: italic; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .input-row { flex-direction: column; }
+      .container { padding: 1rem; }
+      .tombstone { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="/" class="active">Autopsy Room</a>
+      <a href="/cemetery.html">Cemetery</a>
+    </nav>
+
+    <header>
+      <div class="cross">&#x271D;</div>
+      <h1>MEME Mortuary</h1>
+      <p class="subtitle">Where dead coins get their final roast</p>
+    </header>
+
+    <div class="input-section">
+      <label>Present the Deceased</label>
+      <div class="input-row">
+        <input type="text" id="addressInput" placeholder="0x... (BNB Chain contract address)" spellcheck="false" />
+        <button class="btn" id="autopsyBtn" onclick="performAutopsy()">Autopsy</button>
+      </div>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="loading" id="loading">
+      <div class="skull">&#x1F480;</div>
+      <p id="loadingText">The coroner is examining the remains...</p>
+    </div>
+
+    <div class="report" id="report">
+      <div class="tombstone">
+        <div class="rip">Rest In Peace (lol)</div>
+        <div class="token-name" id="tokenName"></div>
+        <div class="token-symbol" id="tokenSymbol"></div>
+        <div class="dates" id="tokenDates"></div>
+        <div class="death-badge" id="deathCategory"></div>
+        <div class="epitaph" id="epitaph"></div>
+      </div>
+
+      <!-- Absurdity Score -->
+      <div class="section absurdity-section">
+        <div class="absurdity-label">Absurdity Index</div>
+        <div class="absurdity-bar">
+          <div class="absurdity-fill" id="absurdityFill" style="width:0%"></div>
+        </div>
+        <div class="absurdity-score" id="absurdityScore"></div>
+        <div class="absurdity-comment" id="absurdityComment"></div>
+      </div>
+
+      <div class="section">
+        <h2>&#x2620;&#xFE0F; Cause of Death</h2>
+        <p class="obituary-text" id="causeOfDeath"></p>
+      </div>
+
+      <!-- Last Words -->
+      <div class="section">
+        <h2>&#x1F4AC; Last Words</h2>
+        <div class="last-words" id="lastWords"></div>
+      </div>
+
+      <div class="section">
+        <h2>&#x1F4C9; Vitals at Time of Death</h2>
+        <div class="vitals-grid" id="vitalsGrid"></div>
+      </div>
+
+      <div class="section">
+        <h2>&#x1F56F;&#xFE0F; Obituary</h2>
+        <div class="obituary-text" id="obituary"></div>
+      </div>
+
+      <div class="section" id="voicesSection" style="display:none">
+        <h2>&#x1F4E2; Community Mourning (Real Reactions)</h2>
+        <div id="voicesList"></div>
+      </div>
+
+      <div class="section" id="holdersSection">
+        <h2>&#x1F3DB;&#xFE0F; Chief Mourners (Top Holders)</h2>
+        <ul class="holders-list" id="holdersList"></ul>
+      </div>
+
+      <div class="cemetery-notice" id="cemeteryNotice">
+        &#x26B0;&#xFE0F; This coin has been laid to rest in the <a href="/cemetery.html">MEME Cemetery</a>. Visit to pay your respects (or laugh).
+      </div>
+
+      <div class="share-section">
+        <button class="btn" onclick="shareToTwitter()">Share Obituary on X</button>
+      </div>
+    </div>
+
+    <footer>
+      MEME Mortuary &mdash; BNB Chain AI Sprint Hackathon 2026
+      <div class="footer-joke" id="footerJoke"></div>
+    </footer>
+  </div>
+
+  <script>
+    let currentReport = null;
+
+    const loadingMessages = [
+      "The coroner is examining the remains...",
+      "Digging up the blockchain graveyard...",
+      "Consulting the spirit of Satoshi...",
+      "Checking if the dev is still alive (spoiler: no)...",
+      "Measuring copium levels in the Telegram group...",
+      "Reading the victim's last tweets...",
+      "Dusting off the rug for fingerprints...",
+      "Asking ChatGPT why you bought this...",
+      "Calculating exactly how much you lost, ser...",
+      "The autopsy table is ready. No anesthesia needed, it's already dead...",
+    ];
+
+    const footerJokes = [
+      "No coins were harmed in the making of this autopsy. They were already dead.",
+      "DYOR before buying. Or don't. We need more patients.",
+      "Not financial advice. Clearly none of these coins got any either.",
+      "Powered by the tears of bagholders worldwide.",
+      "ser, this is a mortuary.",
+      "Press F to pay respects. Press B to buy the dip (don't).",
+      "Every autopsy is a lesson. The lesson: NGMI.",
+    ];
+
+    const deathEmojis = {
+      'RUG_PULL': '&#x1F3C3;&#x200D;&#x2642;&#xFE0F;&#x1F4A8;',
+      'LIQUIDITY_DRAIN': '&#x1F6B0;',
+      'NARRATIVE_EXPIRED': '&#x1F4F0;&#x274C;',
+      'WHALE_DUMP': '&#x1F40B;&#x1F4A9;',
+      'HONEYPOT': '&#x1F36F;&#x1F41D;',
+      'SLOW_BLEED': '&#x1FA78;',
+      'STILLBORN': '&#x26B0;&#xFE0F;',
+      'UNKNOWN': '&#x2753;',
+    };
+
+    const absurdityComments = [
+      "", // 0 unused
+      "Boring death. Even the coroner yawned.",
+      "Mildly amusing. Like watching paint dry on a blockchain.",
+      "Getting interesting. The coroner raised an eyebrow.",
+      "Now we're talking. Pass the popcorn.",
+      "Certified degen moment.",
+      "The coroner needs a drink after this one.",
+      "This is why your mom told you to get a real job.",
+      "Peak comedy. The mortuary staff can't stop laughing.",
+      "Absolutely unhinged. The coroner is filing a police report.",
+      "MAXIMUM ABSURDITY. This coin broke the scale. We need therapy.",
+    ];
+
+    // Set random footer joke
+    document.getElementById('footerJoke').innerHTML = footerJokes[Math.floor(Math.random() * footerJokes.length)];
+
+    async function performAutopsy() {
+      var input = document.getElementById('addressInput');
+      var address = input.value.trim();
+      var btn = document.getElementById('autopsyBtn');
+      var loading = document.getElementById('loading');
+      var report = document.getElementById('report');
+      var error = document.getElementById('error');
+
+      error.classList.remove('active');
+      report.classList.remove('active');
+
+      if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        error.textContent = 'ser, that address is invalid. Did you copy it from a fortune cookie?';
+        error.classList.add('active');
+        return;
+      }
+
+      btn.disabled = true;
+      loading.classList.add('active');
+
+      // Rotate loading messages
+      var msgIdx = 0;
+      var loadingEl = document.getElementById('loadingText');
+      loadingEl.textContent = loadingMessages[0];
+      var msgInterval = setInterval(function() {
+        msgIdx = (msgIdx + 1) % loadingMessages.length;
+        loadingEl.textContent = loadingMessages[msgIdx];
+      }, 3000);
+
+      try {
+        var res = await fetch('/api/autopsy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: address }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Autopsy failed');
+        currentReport = data;
+        renderReport(data);
+        report.classList.add('active');
+        document.getElementById('cemeteryNotice').classList.add('active');
+      } catch (e) {
+        error.textContent = e.message || 'The coroner passed out. Even dead coins can be shocking.';
+        error.classList.add('active');
+      } finally {
+        clearInterval(msgInterval);
+        btn.disabled = false;
+        loading.classList.remove('active');
+      }
+    }
+
+    function renderReport(r) {
+      document.getElementById('tokenName').textContent = r.token.name;
+      document.getElementById('tokenSymbol').textContent = '$' + r.token.symbol;
+
+      var born = r.timeline.born !== 'unknown' ? fmtDate(r.timeline.born) : '??? (born in the shadows)';
+      var died = r.timeline.died !== 'still alive' ? fmtDate(r.timeline.died) : 'Still breathing (barely)';
+      document.getElementById('tokenDates').textContent = born + ' \u2014 ' + died;
+
+      var cat = r.deathCategory || 'UNKNOWN';
+      var emoji = deathEmojis[cat] || '&#x2753;';
+      document.getElementById('deathCategory').innerHTML = emoji + ' ' + cat.replace(/_/g, ' ');
+      document.getElementById('epitaph').textContent = '\u201C' + r.epitaph + '\u201D';
+      document.getElementById('causeOfDeath').textContent = r.causeOfDeath;
+
+      // Absurdity score
+      var score = r.absurdityScore || 5;
+      document.getElementById('absurdityFill').style.width = (score * 10) + '%';
+      document.getElementById('absurdityScore').textContent = score + '/10';
+      document.getElementById('absurdityComment').textContent = absurdityComments[score] || '';
+
+      // Last words
+      var lw = document.getElementById('lastWords');
+      lw.innerHTML = (r.lastWords || 'wen... moon... *flatlines*') +
+        '<span class="speaker">\u2014 $' + r.token.symbol + ', moments before death</span>';
+
+      var grid = document.getElementById('vitalsGrid');
+      grid.innerHTML = '';
+      [
+        { label: 'Market Cap (FDV)', value: fmtUsd(r.vitals.peakMarketCap) },
+        { label: 'Current Price', value: fmtUsd(r.vitals.currentPrice), dead: true },
+        { label: 'Liquidity', value: fmtUsd(r.vitals.liquidityUsd), dead: r.vitals.liquidityUsd < 100 },
+        { label: 'Price Change', value: r.vitals.priceChange + '%', dead: r.vitals.priceChange < -50 },
+        { label: '24h Volume', value: fmtUsd(r.vitals.volume24h) },
+        { label: 'Age', value: r.timeline.ageInDays + ' days' },
+      ].forEach(function(v) {
+        var el = document.createElement('div');
+        el.className = 'vital';
+        el.innerHTML = '<div class="label">' + v.label + '</div><div class="value ' + (v.dead ? 'dead' : '') + '">' + v.value + '</div>';
+        grid.appendChild(el);
+      });
+
+      var obit = document.getElementById('obituary');
+      obit.innerHTML = r.obituary.split('\n').filter(function(p) { return p.trim(); }).map(function(p) { return '<p>' + p + '</p>'; }).join('');
+
+      // Community voices
+      var voicesSection = document.getElementById('voicesSection');
+      var voicesList = document.getElementById('voicesList');
+      if (r.communityVoices && r.communityVoices.length > 0) {
+        voicesSection.style.display = 'block';
+        voicesList.innerHTML = '';
+        r.communityVoices.forEach(function(v) {
+          var card = document.createElement('div');
+          card.className = 'voice-card';
+          card.innerHTML = '<div class="voice-text">"' + esc(v.text.slice(0, 250)) + '"</div>' +
+            '<div class="voice-meta">' + esc(v.source) + ' &mdash; <a href="' + esc(v.url) + '" target="_blank">view post</a></div>';
+          voicesList.appendChild(card);
+        });
+      } else {
+        voicesSection.style.display = 'none';
+      }
+
+      var list = document.getElementById('holdersList');
+      var section = document.getElementById('holdersSection');
+      if (r.topHolders && r.topHolders.length > 0) {
+        section.style.display = 'block';
+        list.innerHTML = '';
+        r.topHolders.forEach(function(h) {
+          var li = document.createElement('li');
+          li.innerHTML = '<span class="addr">' + truncAddr(h.address) + '</span><span>' + h.percentage.toFixed(2) + '%</span>';
+          list.appendChild(li);
+        });
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
+      catch(e) { return iso; }
+    }
+
+    function fmtUsd(n) {
+      if (!n) return '$0';
+      if (n < 0.01) return '$' + n.toFixed(6);
+      if (n < 1) return '$' + n.toFixed(4);
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+      return '$' + n.toFixed(2);
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function truncAddr(a) {
+      if (!a || a.length < 12) return a;
+      return a.slice(0, 6) + '...' + a.slice(-4);
+    }
+
+    function shareToTwitter() {
+      if (!currentReport) return;
+      var r = currentReport;
+      var emoji = { 'RUG_PULL': '\uD83C\uDFC3\u200D\u2642\uFE0F\uD83D\uDCA8', 'LIQUIDITY_DRAIN': '\uD83D\uDEB0', 'WHALE_DUMP': '\uD83D\uDC0B\uD83D\uDCA9', 'HONEYPOT': '\uD83C\uDF6F', 'SLOW_BLEED': '\uD83E\uDE78', 'STILLBORN': '\u26B0\uFE0F' };
+      var e = emoji[r.deathCategory] || '\uD83D\uDC80';
+      var text = '\uD83D\uDC80 AUTOPSY REPORT: $' + r.token.symbol + '\n\n' +
+        e + ' Cause of Death: ' + r.deathCategory.replace(/_/g, ' ') + '\n' +
+        '\uD83D\uDCAC Last Words: "' + (r.lastWords || 'wen moon').substring(0, 60) + '"\n' +
+        '\u201C' + r.epitaph + '\u201D\n\n' +
+        'Absurdity Score: ' + (r.absurdityScore || '?') + '/10\n\n' +
+        '\uD83E\uDEA6 via MEME Mortuary | #MEMEMortuary #BNBChain #FourMeme';
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    document.getElementById('addressInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') performAutopsy();
+    });
+
+    // Check URL params for auto-autopsy (from cemetery link)
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var addr = params.get('address');
+      if (addr && /^0x[a-fA-F0-9]{40}$/.test(addr)) {
+        document.getElementById('addressInput').value = addr;
+        performAutopsy();
+      }
+    })();
+  </script>
+</body>
+</html>

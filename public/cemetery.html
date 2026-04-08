@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEME Cemetery - Where Dead Coins Rest Forever</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1a1a1a;
+      --text: #c8c0b0;
+      --text-dim: #6a6358;
+      --accent: #8b7355;
+      --accent-glow: #b89a6b;
+      --red: #8b3a3a;
+      --red-bright: #c77;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Text', Georgia, serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(139,115,85,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; }
+    .nav a {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav a:hover { color: var(--accent-glow); }
+    .nav a.active { color: var(--accent-glow); border-bottom: 1px solid var(--accent); }
+
+    header {
+      text-align: center;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    header .gate { font-size: 2.5rem; opacity: 0.7; margin-bottom: 0.5rem; }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--accent-glow);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle { font-size: 1.1rem; color: var(--text-dim); font-style: italic; }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      padding: 1.2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      color: var(--accent-glow);
+      font-weight: bold;
+    }
+    .stat .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 4rem 0;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .loading .icon { font-size: 2rem; animation: float 2s ease-in-out infinite; margin-bottom: 1rem; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-dim);
+    }
+    .empty .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    .empty p { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .empty a { color: var(--accent-glow); text-decoration: none; }
+    .empty a:hover { text-decoration: underline; }
+
+    /* GRAVES GRID */
+    .graves-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .grave-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grave-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .grave-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .grave-card:hover::before { opacity: 1; }
+
+    .grave-card:hover .grave-shake {
+      animation: tombshake 0.4s ease-in-out;
+    }
+
+    @keyframes tombshake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-1.5deg); }
+      40% { transform: rotate(2deg); }
+      60% { transform: rotate(-1deg); }
+      80% { transform: rotate(0.5deg); }
+    }
+
+    .grave-rip {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .grave-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-glow);
+      margin-bottom: 0.2rem;
+      word-break: break-all;
+    }
+
+    .grave-symbol {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 0.8rem;
+    }
+
+    .grave-dates {
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .grave-badge {
+      display: inline-block;
+      background: rgba(139, 58, 58, 0.2);
+      border: 1px solid var(--red);
+      color: var(--red-bright);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      margin-bottom: 0.8rem;
+    }
+
+    .grave-epitaph {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .grave-score {
+      margin-top: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+    footer .footer-joke { opacity: 0.5; margin-top: 0.3rem; font-style: italic; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.6rem; }
+      .graves-grid { grid-template-columns: 1fr; }
+      .stats-bar { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <a href="/">Autopsy Room</a>
+      <a href="/cemetery.html" class="active">Cemetery</a>
+    </nav>
+
+    <header>
+      <div class="gate">&#x26B0;&#xFE0F;</div>
+      <h1>MEME Cemetery</h1>
+      <p class="subtitle">A graveyard for every shitcoin that didn't make it</p>
+    </header>
+
+    <div class="stats-bar" id="statsBar" style="display:none">
+      <div class="stat">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Coins Buried</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statTopCause">-</div>
+        <div class="stat-label">Most Common Cause</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statAvgAbsurdity">-</div>
+        <div class="stat-label">Avg Absurdity</div>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="icon">&#x26B0;&#xFE0F;</div>
+      <p>Wandering through the graveyard...</p>
+    </div>
+
+    <div class="empty" id="empty" style="display:none">
+      <div class="icon">&#x1F3DC;&#xFE0F;</div>
+      <p>The cemetery is empty... for now.</p>
+      <p>Go <a href="/">perform an autopsy</a> to bury the first coin.</p>
+    </div>
+
+    <div class="graves-grid" id="gravesGrid"></div>
+
+    <footer>
+      MEME Mortuary &mdash; BNB Chain AI Sprint Hackathon 2026
+      <div class="footer-joke">In loving memory of all the coins that promised "wen moon" and delivered "wen zero".</div>
+    </footer>
+  </div>
+
+  <script>
+    var deathEmojis = {
+      'RUG_PULL': '\uD83C\uDFC3\u200D\u2642\uFE0F\uD83D\uDCA8',
+      'LIQUIDITY_DRAIN': '\uD83D\uDEB0',
+      'NARRATIVE_EXPIRED': '\uD83D\uDCF0\u274C',
+      'WHALE_DUMP': '\uD83D\uDC0B\uD83D\uDCA9',
+      'HONEYPOT': '\uD83C\uDF6F\uD83D\uDC1D',
+      'SLOW_BLEED': '\uD83E\uDE78',
+      'STILLBORN': '\u26B0\uFE0F',
+      'UNKNOWN': '\u2753',
+    };
+
+    async function loadCemetery() {
+      var loading = document.getElementById('loading');
+      var empty = document.getElementById('empty');
+      var grid = document.getElementById('gravesGrid');
+      var statsBar = document.getElementById('statsBar');
+
+      try {
+        var res = await fetch('/api/cemetery');
+        var data = await res.json();
+        loading.style.display = 'none';
+
+        if (!data.graves || data.graves.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        // Stats
+        statsBar.style.display = 'flex';
+        document.getElementById('statTotal').textContent = data.total;
+
+        var causes = {};
+        var totalAbsurdity = 0;
+        data.graves.forEach(function(g) {
+          var cat = g.deathCategory || 'UNKNOWN';
+          causes[cat] = (causes[cat] || 0) + 1;
+          totalAbsurdity += (g.absurdityScore || 5);
+        });
+
+        var topCause = Object.entries(causes).sort(function(a, b) { return b[1] - a[1]; })[0];
+        document.getElementById('statTopCause').textContent = (topCause ? topCause[0].replace(/_/g, ' ') : '-');
+        document.getElementById('statAvgAbsurdity').textContent = (totalAbsurdity / data.graves.length).toFixed(1) + '/10';
+
+        // Render graves
+        data.graves.forEach(function(g) {
+          var card = document.createElement('div');
+          card.className = 'grave-card';
+          card.onclick = function() {
+            window.location.href = '/?address=' + g.token.address;
+          };
+
+          var born = g.timeline.born !== 'unknown' ? fmtDate(g.timeline.born) : '???';
+          var died = g.timeline.died !== 'still alive' ? fmtDate(g.timeline.died) : 'comatose';
+          var cat = g.deathCategory || 'UNKNOWN';
+          var emoji = deathEmojis[cat] || '\u2753';
+
+          card.innerHTML =
+            '<div class="grave-shake">' +
+            '<div class="grave-rip">R.I.P.</div>' +
+            '<div class="grave-name">' + esc(g.token.name) + '</div>' +
+            '<div class="grave-symbol">$' + esc(g.token.symbol) + '</div>' +
+            '<div class="grave-dates">' + born + ' \u2014 ' + died + '</div>' +
+            '<div class="grave-badge">' + emoji + ' ' + cat.replace(/_/g, ' ') + '</div>' +
+            '<div class="grave-epitaph">\u201C' + esc(g.epitaph || 'NGMI') + '\u201D</div>' +
+            (g.absurdityScore ? '<div class="grave-score">Absurdity: ' + g.absurdityScore + '/10</div>' : '') +
+            '</div>';
+
+          grid.appendChild(card);
+        });
+
+      } catch (e) {
+        loading.style.display = 'none';
+        empty.style.display = 'block';
+        empty.querySelector('p').textContent = 'Failed to load the cemetery. Even graveyards have bad days.';
+      }
+    }
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
+      catch(e) { return iso; }
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    loadCemetery();
+  </script>
+</body>
+</html>
