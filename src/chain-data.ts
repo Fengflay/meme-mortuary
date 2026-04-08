@@ -1,6 +1,20 @@
 // Fetch on-chain data for a token on BNB Chain
 
-const BSC_RPC = "https://bsc-dataseed.binance.org/";
+// Multiple BSC RPC endpoints to avoid rate limiting
+const BSC_RPCS = [
+  "https://bsc-dataseed1.defibit.io/",
+  "https://bsc-dataseed2.defibit.io/",
+  "https://bsc-dataseed1.ninicoin.io/",
+  "https://bsc-dataseed2.ninicoin.io/",
+  "https://bsc-dataseed3.defibit.io/",
+  "https://bsc-dataseed4.defibit.io/",
+];
+let rpcIndex = 0;
+function getNextRpc(): string {
+  const rpc = BSC_RPCS[rpcIndex % BSC_RPCS.length];
+  rpcIndex++;
+  return rpc;
+}
 const BSCSCAN_API = "https://api.bscscan.com/api";
 
 export interface TokenInfo {
@@ -40,20 +54,39 @@ export interface ChainData {
   pairAddress: string | null;
 }
 
-// Direct RPC call to BNB Chain node
+// Direct RPC call to BNB Chain node with fallback rotation
 async function rpcCall(to: string, data: string): Promise<string> {
-  const res = await fetch(BSC_RPC, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      method: "eth_call",
-      params: [{ to, data }, "latest"],
-      id: 1,
-    }),
-  });
-  const json: any = await res.json();
-  return json.result || "0x";
+  const rpc = getNextRpc();
+  try {
+    const res = await fetch(rpc, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "eth_call",
+        params: [{ to, data }, "latest"],
+        id: 1,
+      }),
+    });
+    if (!res.ok) throw new Error(`RPC ${res.status}`);
+    const json: any = await res.json();
+    return json.result || "0x";
+  } catch {
+    // Retry with a different RPC
+    const fallback = getNextRpc();
+    const res = await fetch(fallback, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "eth_call",
+        params: [{ to, data }, "latest"],
+        id: 1,
+      }),
+    });
+    const json: any = await res.json();
+    return json.result || "0x";
+  }
 }
 
 // Fetch token info using direct RPC calls
